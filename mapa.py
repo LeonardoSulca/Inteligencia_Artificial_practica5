@@ -17,6 +17,7 @@ from kivy.clock import Clock
 
 
 from q_dl import Dqn
+from q_dl2 import Dqn2
 
 # Esta linea es para que el clic derecho no ponga un punto rojo 
 
@@ -33,24 +34,69 @@ brain = Dqn(4,3,0.9)
 action2rotation = [0,20,-20]
 reward = 0
 
+brain2 = Dqn2(4,3,0.9)
+action2rotation2 = [0,20,-20]
+reward2 = 0
+
 # Inicializando el mapa
 first_update = True
 def init():
     global sand
     global goal_x
     global goal_y
+    global goal_x2
+    global goal_y2
     global first_update
     sand = np.zeros((longueur,largeur))
     goal_x = 20
     goal_y = largeur - 20
+    goal_x2 = 20
+    goal_y2 = largeur - 20
     first_update = False
 
 # Inicializando la ultima distancia del carro a la meta 
 last_distance = 0
+last_distance2 = 0
 
 # La clase car
 
 class Car(Widget):
+    angle = NumericProperty(0)
+    rotation = NumericProperty(0)
+    velocity_x = NumericProperty(0)
+    velocity_y = NumericProperty(0)
+    velocity = ReferenceListProperty(velocity_x, velocity_y)
+    sensor1_x = NumericProperty(0)
+    sensor1_y = NumericProperty(0)
+    sensor1 = ReferenceListProperty(sensor1_x, sensor1_y)
+    sensor2_x = NumericProperty(0)
+    sensor2_y = NumericProperty(0)
+    sensor2 = ReferenceListProperty(sensor2_x, sensor2_y)
+    sensor3_x = NumericProperty(0)
+    sensor3_y = NumericProperty(0)
+    sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)
+    signal1 = NumericProperty(0)
+    signal2 = NumericProperty(0)
+    signal3 = NumericProperty(0)
+    
+    def move(self, rotation):
+        self.pos = Vector(*self.velocity) + self.pos
+        self.rotation = rotation
+        self.angle = self.angle + self.rotation
+        self.sensor1 = Vector(30, 0).rotate(self.angle) + self.pos
+        self.sensor2 = Vector(30, 0).rotate((self.angle+30)%360) + self.pos
+        self.sensor3 = Vector(30, 0).rotate((self.angle-30)%360) + self.pos
+        self.signal1 = int(np.sum(sand[int(self.sensor1_x)-10:int(self.sensor1_x)+10, int(self.sensor1_y)-10:int(self.sensor1_y)+10]))/400.
+        self.signal2 = int(np.sum(sand[int(self.sensor2_x)-10:int(self.sensor2_x)+10, int(self.sensor2_y)-10:int(self.sensor2_y)+10]))/400.
+        self.signal3 = int(np.sum(sand[int(self.sensor3_x)-10:int(self.sensor3_x)+10, int(self.sensor3_y)-10:int(self.sensor3_y)+10]))/400.
+        if self.sensor1_x>longueur-10 or self.sensor1_x<10 or self.sensor1_y>largeur-10 or self.sensor1_y<10:
+            self.signal1 = 1.
+        if self.sensor2_x>longueur-10 or self.sensor2_x<10 or self.sensor2_y>largeur-10 or self.sensor2_y<10:
+            self.signal2 = 1.
+        if self.sensor3_x>longueur-10 or self.sensor3_x<10 or self.sensor3_y>largeur-10 or self.sensor3_y<10:
+            self.signal3 = 1.
+
+class Car2(Widget):
     angle = NumericProperty(0)
     rotation = NumericProperty(0)
     velocity_x = NumericProperty(0)
@@ -92,27 +138,45 @@ class Ball2(Widget):
     pass
 class Ball3(Widget):
     pass
+class Ball4(Widget):
+    pass
+class Ball5(Widget):
+    pass
+class Ball6(Widget):
+    pass
 
 # La clase juego
 
 class Game(Widget):
 
     car = ObjectProperty(None)
+    car2 = ObjectProperty(None)
     ball1 = ObjectProperty(None)
     ball2 = ObjectProperty(None)
     ball3 = ObjectProperty(None)
+    ball4 = ObjectProperty(None)
+    ball5 = ObjectProperty(None)
+    ball6 = ObjectProperty(None)
 
     def serve_car(self):
         self.car.center = self.center
         self.car.velocity = Vector(6, 0)
 
+        self.car2.center = self.center
+        self.car2.velocity = Vector(6, 0)
+
     def update(self, dt):
 
         global brain
+        global brain2
         global reward
+        global reward2
         global last_distance
+        global last_distance2
         global goal_x
         global goal_y
+        global goal_x2
+        global goal_y2
         global longueur
         global largeur
 
@@ -123,15 +187,34 @@ class Game(Widget):
 
         xx = goal_x - self.car.x
         yy = goal_y - self.car.y
+        xx2 = goal_x2 - self.car2.x
+        yy2 = goal_y2 - self.car2.y
+
         orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
+        orientation2 = Vector(*self.car2.velocity).angle((xx2,yy2))/180.
+        
         state = [orientation, self.car.signal1, self.car.signal2, self.car.signal3]
+        state2 = [orientation2, self.car2.signal1, self.car2.signal2, self.car2.signal3]
+        
         action = brain.update(state, reward)
+        action2 = brain2.update(state2,reward2)
+        
         rotation = action2rotation[action]
+        rotation2 = action2rotation2[action2]
+        
         self.car.move(rotation)
+        self.car2.move(rotation2)
+
         distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
+        distance2 = np.sqrt((self.car2.x - goal_x2)**2 + (self.car2.y - goal_y2)**2)
+
         self.ball1.pos = self.car.sensor1
         self.ball2.pos = self.car.sensor2
         self.ball3.pos = self.car.sensor3
+
+        self.ball4.pos = self.car2.sensor1
+        self.ball5.pos = self.car2.sensor2
+        self.ball6.pos = self.car2.sensor3
 
         if sand[int(self.car.x),int(self.car.y)] > 0:
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
@@ -141,6 +224,15 @@ class Game(Widget):
             reward = -0.2
             if distance < last_distance:
                 reward = 0.1
+
+        if sand[int(self.car2.x),int(self.car2.y)] > 0:
+            self.car2.velocity = Vector(1, 0).rotate(self.car2.angle)
+            reward2 = -1
+        else:
+            self.car2.velocity = Vector(6, 0).rotate(self.car2.angle)
+            reward2 = -0.2
+            if distance2 < last_distance2:
+                reward2 = 0.1
 
         if self.car.x < 10:
             self.car.x = 10
@@ -160,6 +252,26 @@ class Game(Widget):
             goal_y = self.height-goal_y
 
         last_distance = distance
+
+
+        if self.car2.x < 10:
+            self.car2.x = 10
+            reward2 = -1
+        if self.car2.x > self.width - 10:
+            self.car2.x = self.width - 10
+            reward2 = -1
+        if self.car2.y < 10:
+            self.car2.y = 10
+            reward2 = -1
+        if self.car2.y > self.height - 10:
+            self.car2.y = self.height - 10
+            reward2 = -1
+
+        if distance2 < 100:
+            goal_x2 = self.width-goal_x2
+            goal_y2 = self.height-goal_y2
+
+        last_distance2 = distance2
 
 # Herramientas de pintura
 
@@ -220,10 +332,12 @@ class CarApp(App):
     def save(self, obj):
         print("Guardando la mente...")
         brain.save()
+        brain2.save()
 
     def load(self, obj):
         print("Cargando la ultima mente de IA...")
         brain.load()
+        brain2.load()
 
 # Corriendo todo
 if __name__ == '__main__':

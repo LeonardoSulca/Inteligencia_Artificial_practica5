@@ -12,10 +12,10 @@ import time
 # Arquitectura
 
 
-class Network(nn.Module):
+class Network2(nn.Module):
 
     def __init__(self, input_size, nb_action):
-        super(Network, self).__init__()
+        super(Network2, self).__init__()
         self.input_size = input_size
         self.nb_action = nb_action
         # Combinacion Lineal de toda la data
@@ -25,14 +25,14 @@ class Network(nn.Module):
         self.fc2 = nn.Linear(30, nb_action)
 
     def forward(self, state):
-        x = F.relu(self.fc1(state))
+        x = torch.tanh(self.fc1(state))
         q_values = self.fc2(x)
         return q_values
 
 # Experience Replay
 
 
-class ReplayMemory(object):
+class ReplayMemory2(object):
 
     def __init__(self, capacity):
         self.capacity = capacity
@@ -50,13 +50,13 @@ class ReplayMemory(object):
 # DQN
 
 
-class Dqn(object):
+class Dqn2(object):
 
     def __init__(self, input_size, nb_action, gamma):
         self.start = time.time()
         self.gamma = gamma  # Para las penalizaciones
-        self.model = Network(input_size, nb_action)
-        self.memory = ReplayMemory(capacity=100000)
+        self.model = Network2(input_size, nb_action)
+        self.memory = ReplayMemory2(capacity=100000)
         # variante del descenso del Gradiente
         self.optimizer = optim.Adam(params=self.model.parameters())
         self.last_state = torch.Tensor(input_size).unsqueeze(
@@ -139,12 +139,12 @@ class Dqn(object):
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                    }, 'last_brain.pth')
+                    }, 'last_brain2.pth')
 
     def load(self):
-        if os.path.isfile('last_brain.pth'):
+        if os.path.isfile('last_brain2.pth'):
             print("=> cargar checkpoint... ")
-            checkpoint = torch.load('last_brain.pth')
+            checkpoint = torch.load('last_brain2.pth')
             self.model.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("hecho !")
