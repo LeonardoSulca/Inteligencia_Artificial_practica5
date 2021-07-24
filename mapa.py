@@ -2,9 +2,9 @@
 
 # Librerias
 import numpy as np
-import matplotlib.pyplot as plt
+
 # Agregamos todas las librerias propias de Kivy
-from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
+
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
@@ -56,9 +56,9 @@ def init():
     # sand = np.zeros((longueur, largeur))
     sand = np.zeros((800, 600))  # TODO Cambiar al FINAL se puede mejorar
     goal_x = 20
-    goal_y = largeur - 20
+    goal_y = 424 - 20
     goal_x2 = 20
-    goal_y2 = largeur - 20
+    goal_y2 = 424 - 20
     first_update = False
 
 
@@ -340,10 +340,8 @@ class Game(Widget):
         last_distance2 = distance2
 
         stats = {
-            # 'Distance btw Goals': "{0:.2f}".format(self.btw_goals),
-            # 'Destination': self.get_destination(),
-            'Distance to Dest': "{0:.2f}".format(last_distance),
-            # 'Steps': str(self.steps),
+            'Distance to Dest from car 1': "{0:.2f}".format(last_distance),
+            'Distance to Dest from car 2': "{0:.2f}".format(last_distance2),
             'Car 1 sensors': 'R [{0:.1f}] B [{1:.1f}] Y [{2:.1f}]'.format(self.car.signal1,
                                                                           self.car.signal2,
                                                                           self.car.signal3),
@@ -380,7 +378,6 @@ class StatsWidget(GridLayout):
 
 
 class TopPanel(BoxLayout):
-    # graph_widget = ObjectProperty(None)
     stats_widget = ObjectProperty(None)
 
     def __init__(self, **kwargs):
@@ -391,7 +388,6 @@ class MyPaintWidget(Widget):
 
     def on_touch_down(self, touch):
         global length, n_points, last_x, last_y
-        print("Tamaño sand ", sand.shape)
         with self.canvas:
             Color(0.8, 0.7, 0)
             d = 10.
@@ -404,7 +400,6 @@ class MyPaintWidget(Widget):
 
     def on_touch_move(self, touch):
         global length, n_points, last_x, last_y
-        print("Tamaño sand ", sand.shape)
         if touch.button == 'left':
             touch.ud['line'].points += [touch.x, touch.y]
             x = int(touch.x)
@@ -419,59 +414,10 @@ class MyPaintWidget(Widget):
             last_y = y
 
 
-class GraphWidget(BoxLayout):
-    game_widget = None
-    to_display = []
-    graph_canvas = None
-    fig = None
-    ax = None
-
-    paused = False
-
-    nb_pointsdisplay = 1000
-    refresh_rate = 10
-
-    def __init__(self, **kwargs):
-        super(GraphWidget, self).__init__(**kwargs)
-        Clock.schedule_interval(self.update, 1.0 / self.refresh_rate)
-
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111)
-        self.line1, = self.ax.plot([])
-        self.ax.set_ylabel("Score Mean")
-        self.graph_canvas = FigureCanvasKivyAgg(figure=self.fig)
-
-        self.add_widget(self.graph_canvas)
-
-    def update(self, dt):
-        if self.paused:
-            return False
-        if self.game_widget is None or len(self.game_widget.scores) == 0:
-            return
-
-        nb_scores = min(len(self.game_widget.scores), self.nb_pointsdisplay)
-        x_data = range(0, nb_scores)
-        start = len(self.game_widget.scores) - nb_scores
-        y_data = self.game_widget.scores[start:]
-        self.line1.set_ydata(y_data)
-        min_val, max_val = np.min(self.game_widget.scores), np.max(self.game_widget.scores)
-        val_range = max_val - min_val
-        margin = 5 * val_range / 100
-        self.ax.set_ylim(min_val - margin, max_val + margin)
-
-        self.line1.set_xdata(x_data)
-        self.ax.set_xlim(0, nb_scores)
-
-        self.graph_canvas.draw()
-
-
 class TopMenuWidget(ActionBar):
-    # save_map_button = ObjectProperty(None)
     save_brain_button = ObjectProperty(None)
     load_btn = ObjectProperty(None)
-    # load_map_btn = ObjectProperty(None)
     clear_btn = ObjectProperty(None)
-    # config_btn = ObjectProperty(None)
 
 
 class RootWidget(BoxLayout):
@@ -485,29 +431,16 @@ class CarApp(App):
         self.game_widget.serve_car()
         Clock.schedule_interval(self.game_widget.update, 1.0/60.0)
         self.painter = MyPaintWidget()
-        """
-        clearbtn = Button(text='clear')
-        savebtn = Button(text='save', pos=(self.game_widget.width, 0))
-        loadbtn = Button(text='load', pos=(2 * self.game_widget.width, 0))
-        clearbtn.bind(on_release=self.clear_canvas)
-        savebtn.bind(on_release=self.save)
-        loadbtn.bind(on_release=self.load)
-        """
+
         self.game_widget.add_widget(self.painter)
-        # self.game_widget.add_widget(clearbtn)
-        # self.game_widget.add_widget(savebtn)
-        # self.game_widget.add_widget(loadbtn)
 
         action_bar = TopMenuWidget()
         action_bar.save_brain_button.bind(on_release=self.save)
         action_bar.load_btn.bind(on_release=self.load)
         action_bar.clear_btn.bind(on_release=self.clear_canvas)
 
-        # sand = np.zeros()
-        # root.add_widget(clearbtn)
 
         self.top_panel = TopPanel()
-        self.top_panel.graph_widget.game_widget = self.game_widget
         self.game_widget.stats_widget = self.top_panel.stats_widget
 
         root = RootWidget()
@@ -519,7 +452,6 @@ class CarApp(App):
     def clear_canvas(self, obj):
         global sand
         self.painter.canvas.clear()
-        # sand = np.zeros((longueur, largeur)) # TODO Var al final
         sand = np.zeros((800, 600))
 
     def save(self, obj):
