@@ -63,6 +63,7 @@ class Dqn(object):
             0)  # Tensor Vacio de dimension [0,3]
         self.last_action = 0
         self.last_reward = 0
+        self.reward_window = []
 
     def select_action(self, state):  # Selecciona una accion
         # Probabilidades del estado actual:
@@ -134,7 +135,13 @@ class Dqn(object):
         self.last_state = new_state
         self.last_action = new_action
         self.last_reward = new_reward
+        self.reward_window.append(new_reward)
+        if len(self.reward_window) > 1000:
+            del self.reward_window[0]
         return new_action
+
+    def score(self):
+        return sum(self.reward_window) / (len(self.reward_window) + 1)  # Truco para no dividir entre 0
 
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),

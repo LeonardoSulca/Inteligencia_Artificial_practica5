@@ -1,5 +1,4 @@
 #:kivy 1.0.9
-# ref: https://kivy.org/docs/tutorials/pong.html
 
 <Car>:
     size: 20, 10
@@ -111,3 +110,42 @@
     Ball6:
         id: game_ball6
         center: self.parent.center
+
+<RootWidget>:
+    orientation: 'vertical'
+
+<TopMenuWidget>:
+    pos_hint: {'top':1}
+    save_brain_button: save_brain_button
+    load_btn: load_button
+    clear_btn: clear_button
+
+    ActionView:
+        use_separator: True
+        ActionPrevious:
+            title: 'Self-Driving Car'
+            with_previous: False
+        ActionButton:
+            id: save_brain_button
+            text: 'Save'
+        ActionButton:
+            id: load_button
+            text: 'Load'
+        ActionButton:
+            id: clear_button
+            text: 'Clear'
+
+<TopPanel>
+    orientation: 'horizontal'
+    graph_widget: graph_widget
+    stats_widget: stats_widget
+    size_hint: (1, 0.3)
+    GraphWidget:
+        id: graph_widget
+        size_hint: (0.7, 1)
+    StatsWidget:
+        id: stats_widget
+        size_hint: (0.3, 1)
+
+<StatsWidget>
+    cols:2
