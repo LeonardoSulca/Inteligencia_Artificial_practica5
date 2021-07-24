@@ -22,6 +22,7 @@ from kivy.clock import Clock
 # Importaremos Nuestras clases de aprendizaje por refuerzo profundo
 from q_dl import Dqn
 from q_dl2 import Dqn2
+from q_dl3 import Dqn3
 
 # Esta linea es para que el clic derecho no ponga un punto rojo
 
@@ -42,6 +43,11 @@ brain2 = Dqn2(4, 3, 0.9)
 action2rotation2 = [0, 20, -20]
 reward2 = 0
 
+
+brain3 = Dqn3(4, 3, 0.9)
+action2rotation3 = [0, 20, -20]
+reward3 = 0
+
 # Inicializando el mapa
 first_update = True
 
@@ -52,6 +58,8 @@ def init():
     global goal_y
     global goal_x2
     global goal_y2
+    global goal_x3
+    global goal_y3
     global first_update
     # sand = np.zeros((longueur, largeur))
     sand = np.zeros((800, 600))  # TODO Cambiar al FINAL se puede mejorar
@@ -59,6 +67,8 @@ def init():
     goal_y = 424 - 20
     goal_x2 = 20
     goal_y2 = 424 - 20
+    goal_x3 = 20
+    goal_y3 = 424 - 20
     first_update = False
 
 
@@ -66,7 +76,7 @@ def init():
 
 last_distance = 0
 last_distance2 = 0
-
+last_distance3 = 0
 # La clase car nos permitirá rastrear los parametros del carrito, además desde aqui
 # podemos detectar la arena (obstaculo principal) del entorno y
 # podemos manipular el movimiento de las acciones resultantes de nuestro Dqn.
@@ -164,6 +174,44 @@ class Car2(Widget):
         if self.sensor3_x > longueur-10 or self.sensor3_x < 10 or self.sensor3_y > largeur-10 or self.sensor3_y < 10:
             self.signal3 = 1.
 
+class Car3(Widget):
+    angle = NumericProperty(0)
+    rotation = NumericProperty(0)
+    velocity_x = NumericProperty(0)
+    velocity_y = NumericProperty(0)
+    velocity = ReferenceListProperty(velocity_x, velocity_y)
+    sensor1_x = NumericProperty(0)
+    sensor1_y = NumericProperty(0)
+    sensor1 = ReferenceListProperty(sensor1_x, sensor1_y)
+    sensor2_x = NumericProperty(0)
+    sensor2_y = NumericProperty(0)
+    sensor2 = ReferenceListProperty(sensor2_x, sensor2_y)
+    sensor3_x = NumericProperty(0)
+    sensor3_y = NumericProperty(0)
+    sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)
+    signal1 = NumericProperty(0)
+    signal2 = NumericProperty(0)
+    signal3 = NumericProperty(0)
+
+    def move(self, rotation):
+        self.pos = Vector(*self.velocity) + self.pos
+        self.rotation = rotation
+        self.angle = self.angle + self.rotation
+        self.sensor1 = Vector(30, 0).rotate(self.angle) + self.pos
+        self.sensor2 = Vector(30, 0).rotate((self.angle+30) % 360) + self.pos
+        self.sensor3 = Vector(30, 0).rotate((self.angle-30) % 360) + self.pos
+        self.signal1 = int(np.sum(sand[int(self.sensor1_x)-10:int(
+            self.sensor1_x)+10, int(self.sensor1_y)-10:int(self.sensor1_y)+10]))/400.
+        self.signal2 = int(np.sum(sand[int(self.sensor2_x)-10:int(
+            self.sensor2_x)+10, int(self.sensor2_y)-10:int(self.sensor2_y)+10]))/400.
+        self.signal3 = int(np.sum(sand[int(self.sensor3_x)-10:int(
+            self.sensor3_x)+10, int(self.sensor3_y)-10:int(self.sensor3_y)+10]))/400.
+        if self.sensor1_x > longueur-10 or self.sensor1_x < 10 or self.sensor1_y > largeur-10 or self.sensor1_y < 10:
+            self.signal1 = 1.
+        if self.sensor2_x > longueur-10 or self.sensor2_x < 10 or self.sensor2_y > largeur-10 or self.sensor2_y < 10:
+            self.signal2 = 1.
+        if self.sensor3_x > longueur-10 or self.sensor3_x < 10 or self.sensor3_y > largeur-10 or self.sensor3_y < 10:
+            self.signal3 = 1.
 
 class Ball1(Widget):
     pass
@@ -188,6 +236,17 @@ class Ball5(Widget):
 class Ball6(Widget):
     pass
 
+class Ball7(Widget):
+    pass
+
+
+class Ball8(Widget):
+    pass
+
+
+class Ball9(Widget):
+    pass
+
 
 class Game(Widget):
 
@@ -199,6 +258,9 @@ class Game(Widget):
     ball4 = ObjectProperty(None)
     ball5 = ObjectProperty(None)
     ball6 = ObjectProperty(None)
+    ball7 = ObjectProperty(None)
+    ball8 = ObjectProperty(None)
+    ball9 = ObjectProperty(None)
 
     stats_widget = None
     scores = []
@@ -210,18 +272,26 @@ class Game(Widget):
         self.car2.center = self.center
         self.car2.velocity = Vector(6, 0)
 
+        self.car3.center = self.center
+        self.car3.velocity = Vector(6, 0)
+
     def update(self, dt):
 
         global brain
         global brain2
+        global brain3
         global reward
         global reward2
+        global reward3
         global last_distance
         global last_distance2
+        global last_distance3
         global goal_x
         global goal_y
         global goal_x2
         global goal_y2
+        global goal_x3
+        global goal_y3
         global longueur
         global largeur
 
@@ -241,27 +311,37 @@ class Game(Widget):
         yy = goal_y - self.car.y
         xx2 = goal_x2 - self.car2.x
         yy2 = goal_y2 - self.car2.y
+        xx3 = goal_x3 - self.car3.x
+        yy3 = goal_y3 - self.car3.y
 
         orientation = Vector(*self.car.velocity).angle((xx, yy))/180.
         orientation2 = Vector(*self.car2.velocity).angle((xx2, yy2))/180.
+        orientation3 = Vector(*self.car3.velocity).angle((xx3, yy3))/180.
 
         state = [orientation, self.car.signal1,
                  self.car.signal2, self.car.signal3]
         state2 = [orientation2, self.car2.signal1,
                   self.car2.signal2, self.car2.signal3]
+        state3 = [orientation3, self.car3.signal1,
+                  self.car3.signal2, self.car3.signal3]
 
         action = brain.update(state, reward)
         action2 = brain2.update(state2, reward2)
+        action3 = brain3.update(state3, reward3)
 
         rotation = action2rotation[action]
         rotation2 = action2rotation2[action2]
+        rotation3 = action2rotation3[action3]
 
         self.car.move(rotation)
         self.car2.move(rotation2)
+        self.car3.move(rotation3)
 
         distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
         distance2 = np.sqrt((self.car2.x - goal_x2)**2 +
                             (self.car2.y - goal_y2)**2)
+        distance3 = np.sqrt((self.car3.x - goal_x3)**2 +
+                            (self.car3.y - goal_y3)**2)
 
         # Actualizamos las posiciones de los sensores en el mapa.
         self.ball1.pos = self.car.sensor1
@@ -271,6 +351,10 @@ class Game(Widget):
         self.ball4.pos = self.car2.sensor1
         self.ball5.pos = self.car2.sensor2
         self.ball6.pos = self.car2.sensor3
+
+        self.ball7.pos = self.car3.sensor1
+        self.ball8.pos = self.car3.sensor2
+        self.ball9.pos = self.car3.sensor3
 
         self.scores.append(brain.score())
         # Cuando el carrito esta frente al obstaculo disminuye su velocidad a 1.
@@ -299,6 +383,15 @@ class Game(Widget):
             reward2 = -0.2
             if distance2 < last_distance2:
                 reward2 = 0.1
+
+        if sand[int(self.car3.x), int(self.car3.y)] > 0:
+            self.car3.velocity = Vector(1, 0).rotate(self.car3.angle)
+            reward3 = -1
+        else:
+            self.car3.velocity = Vector(6, 0).rotate(self.car3.angle)
+            reward3 = -0.2
+            if distance3 < last_distance3:
+                reward3 = 0.1
 
         # Si el carrito logra salirse de los bordes del mapa, se dará una penalidad de -1.
         if self.car.x < 10:
@@ -339,17 +432,41 @@ class Game(Widget):
 
         last_distance2 = distance2
 
+        if self.car3.x < 10:
+            self.car3.x = 10
+            reward3 = -1
+        if self.car3.x > self.width - 10:
+            self.car3.x = self.width - 10
+            reward3 = -1
+        if self.car3.y < 10:
+            self.car3.y = 10
+            reward3 = -1
+        if self.car3.y > self.height - 10:
+            self.car3.y = self.height - 10
+            reward3 = -1
+
+        if distance3 < 100:
+            goal_x3 = self.width-goal_x3
+            goal_y3 = self.height-goal_y3
+
+        last_distance3 = distance3
+
         stats = {
             'Distance to Dest from car 1': "{0:.2f}".format(last_distance),
             'Distance to Dest from car 2': "{0:.2f}".format(last_distance2),
+            'Distance to Dest from car 3': "{0:.2f}".format(last_distance3),
             'Car 1 sensors': 'R [{0:.1f}] B [{1:.1f}] Y [{2:.1f}]'.format(self.car.signal1,
                                                                           self.car.signal2,
                                                                           self.car.signal3),
             'Car 2 sensors': 'R [{0:.1f}] B [{1:.1f}] Y [{2:.1f}]'.format(self.car2.signal1,
                                                                           self.car2.signal2,
                                                                           self.car2.signal3),
+            'Car 3 sensors': 'R [{0:.1f}] B [{1:.1f}] Y [{2:.1f}]'.format(self.car3.signal1,
+                                                                          self.car3.signal2,
+                                                                          self.car3.signal3),
             'Last reward car 1': "{0:.2f}".format(reward),
             'Last reward car 2': "{0:.2f}".format(reward2),
+            'Last reward car 3': "{0:.2f}".format(reward3),
         }
 
         if self.stats_widget is not None:
@@ -458,11 +575,13 @@ class CarApp(App):
         print("Guardando la memoria...")
         brain.save()
         brain2.save()
+        brain3.save()
 
     def load(self, obj):
         print("Cargando la ultima memoria de IA...")
         brain.load()
         brain2.load()
+        brain3.load()
 
 
 # Corriendo todo
