@@ -5,7 +5,7 @@ import numpy as np
 from random import random, randint
 import time
 
-# Paquetes Kivy
+# Agregamos todas las librerias propias de Kivy
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.button import Button
@@ -16,6 +16,7 @@ from kivy.vector import Vector
 from kivy.clock import Clock
 
 
+# Importaremos Nuestras clases de aprendizaje por refuerzo profundo
 from q_dl import Dqn
 from q_dl2 import Dqn2
 
@@ -58,9 +59,13 @@ def init():
 last_distance = 0
 last_distance2 = 0
 
-# La clase car
-
+# La clase car nos permitirá rastrear los parametros del carrito, además desde aqui
+# podemos detectar la arena (obstaculo principal) del entorno y 
+# podemos manipular el movimiento de las acciones resultantes de nuestro Dqn.
 class Car(Widget):
+
+    # Inicializamos todos los parametros del entorno
+    # Comenzamos por inicializar el angulo, la velocidad y los sensores del carro. 
     angle = NumericProperty(0)
     rotation = NumericProperty(0)
     velocity_x = NumericProperty(0)
@@ -75,6 +80,7 @@ class Car(Widget):
     sensor3_x = NumericProperty(0)
     sensor3_y = NumericProperty(0)
     sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)
+    # Inicializamos además las señales que recibe cada sensor.
     signal1 = NumericProperty(0)
     signal2 = NumericProperty(0)
     signal3 = NumericProperty(0)
@@ -83,12 +89,21 @@ class Car(Widget):
         self.pos = Vector(*self.velocity) + self.pos
         self.rotation = rotation
         self.angle = self.angle + self.rotation
-        self.sensor1 = Vector(30, 0).rotate(self.angle) + self.pos
+        # Actualizamos los sensores dado el movimiento y giro del carrito.
+        # Sensor1 siempre al frente del carrito.
+        self.sensor1 = Vector(30, 0).rotate(self.angle) + self.pos  
+        # Sensores 2 y 3 ubicados en posiciones izquierda y derecha a 30 grados del frente.
         self.sensor2 = Vector(30, 0).rotate((self.angle+30)%360) + self.pos
         self.sensor3 = Vector(30, 0).rotate((self.angle-30)%360) + self.pos
+        # Actualizamos lectura de la señales de los sensores, aqui queremos obtener la presencia de arena
+        # por lo que calcularemos la densidad de arena encontrada por el sensor, sumando los puntos 
+        # que son arena (Que se encuentren En un rango cuadrado de 20 pixeles de lado) y dividiendolos entre 
+        # el area (400 px).
         self.signal1 = int(np.sum(sand[int(self.sensor1_x)-10:int(self.sensor1_x)+10, int(self.sensor1_y)-10:int(self.sensor1_y)+10]))/400.
+        print(self.signal1)
         self.signal2 = int(np.sum(sand[int(self.sensor2_x)-10:int(self.sensor2_x)+10, int(self.sensor2_y)-10:int(self.sensor2_y)+10]))/400.
         self.signal3 = int(np.sum(sand[int(self.sensor3_x)-10:int(self.sensor3_x)+10, int(self.sensor3_y)-10:int(self.sensor3_y)+10]))/400.
+        # Si algun sensor cae dentro de los margenes de la ventana, se dará como obstaculo de densidad 1.
         if self.sensor1_x>longueur-10 or self.sensor1_x<10 or self.sensor1_y>largeur-10 or self.sensor1_y<10:
             self.signal1 = 1.
         if self.sensor2_x>longueur-10 or self.sensor2_x<10 or self.sensor2_y>largeur-10 or self.sensor2_y<10:
@@ -132,6 +147,7 @@ class Car2(Widget):
         if self.sensor3_x>longueur-10 or self.sensor3_x<10 or self.sensor3_y>largeur-10 or self.sensor3_y<10:
             self.signal3 = 1.
 
+
 class Ball1(Widget):
     pass
 class Ball2(Widget):
@@ -145,7 +161,6 @@ class Ball5(Widget):
 class Ball6(Widget):
     pass
 
-# La clase juego
 
 class Game(Widget):
 
@@ -185,9 +200,9 @@ class Game(Widget):
         if first_update:
             init()
 
-        xx = goal_x - self.car.x
-        yy = goal_y - self.car.y
-        xx2 = goal_x2 - self.car2.x
+        xx = goal_x - self.car.x # Diferencia de x-coordenadas entre la meta y el carrito.
+        yy = goal_y - self.car.y # Diferencia de y-coordenadas entre la meta y el carrito.
+        xx2 = goal_x2 - self.car2.x 
         yy2 = goal_y2 - self.car2.y
 
         orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
@@ -208,6 +223,7 @@ class Game(Widget):
         distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
         distance2 = np.sqrt((self.car2.x - goal_x2)**2 + (self.car2.y - goal_y2)**2)
 
+	# Actualizamos las posiciones de los sensores en el mapa.
         self.ball1.pos = self.car.sensor1
         self.ball2.pos = self.car.sensor2
         self.ball3.pos = self.car.sensor3
@@ -216,9 +232,11 @@ class Game(Widget):
         self.ball5.pos = self.car2.sensor2
         self.ball6.pos = self.car2.sensor3
 
+	# Cuando el carrito esta frente al obstaculo disminuye su velocidad a 1.
         if sand[int(self.car.x),int(self.car.y)] > 0:
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
             reward = -1
+	# Caso contrario el carrito mantiene una velocidad de 6.
         else:
             self.car.velocity = Vector(6, 0).rotate(self.car.angle)
             reward = -0.2
@@ -234,6 +252,7 @@ class Game(Widget):
             if distance2 < last_distance2:
                 reward2 = 0.1
 
+	# Si el carrito logra salirse de los bordes del mapa, se dará una penalidad de -1.
         if self.car.x < 10:
             self.car.x = 10
             reward = -1
