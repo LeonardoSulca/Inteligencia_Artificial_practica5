@@ -9,7 +9,7 @@ import numpy as np
 
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-Config.set('graphics', 'maxfps', '60')
+Config.set('graphics', 'maxfps', '20')
 
 from kivy.app import App
 from kivy.uix.label import Label
@@ -55,7 +55,7 @@ action2rotation4 = [0, 20, -20]
 reward4 = 0
 # Inicializando el mapa
 first_update = True
-
+conteo = 0
 
 def init():
     global sand
@@ -254,6 +254,7 @@ class Car4(Widget):
         self.angle = self.angle + self.rotation
         # Actualizamos los sensores dado el movimiento y giro del carrito.
         # Sensor1 siempre al frente del carrito.
+        
         self.sensor1 = Vector(30, 0).rotate(self.angle) + self.pos
         # Sensores 2 y 3 ubicados en posiciones izquierda y derecha a 30 grados del frente.
         self.sensor2 = Vector(30, 0).rotate((self.angle+30) % 360) + self.pos
@@ -262,13 +263,17 @@ class Car4(Widget):
         # por lo que calcularemos la densidad de arena encontrada por el sensor, sumando los puntos
         # que son arena (Que se encuentren En un rango cuadrado de 20 pixeles de lado) y dividiendolos entre
         # el area (400 px).
+        
         self.signal1 = int(np.sum(sand[int(self.sensor1_x)-10:int(
             self.sensor1_x)+10, int(self.sensor1_y)-10:int(self.sensor1_y)+10]))/400.
+
         # print(self.signal1)
         self.signal2 = int(np.sum(sand[int(self.sensor2_x)-10:int(
             self.sensor2_x)+10, int(self.sensor2_y)-10:int(self.sensor2_y)+10]))/400.
+        
         self.signal3 = int(np.sum(sand[int(self.sensor3_x)-10:int(
             self.sensor3_x)+10, int(self.sensor3_y)-10:int(self.sensor3_y)+10]))/400.
+        
         # Si algun sensor cae dentro de los margenes de la ventana, se dará como obstaculo de densidad 1.
         if self.sensor1_x > longueur-10 or self.sensor1_x < 10 or self.sensor1_y > largeur-10 or self.sensor1_y < 10:
             self.signal1 = 1.
@@ -370,6 +375,7 @@ class Game(Widget):
         global reward2
         global reward3
         global reward4
+        global conteo
         global last_distance
         global last_distance2
         global last_distance3
@@ -441,6 +447,7 @@ class Game(Widget):
                             (self.car3.y - goal_y3)**2)
         distance4 = np.sqrt((self.car4.x - goal_x4)**2 +
                             (self.car4.y - goal_y4)**2)
+
         # Actualizamos las posiciones de los sensores en el mapa.
         self.ball1.pos = self.car.sensor1
         self.ball2.pos = self.car.sensor2
@@ -459,50 +466,100 @@ class Game(Widget):
         self.ball12.pos = self.car4.sensor3
 
         self.scores.append(brain.score())
-        # Cuando el carrito esta frente al obstaculo disminuye su velocidad a 1.
-        # TODO NO olvidar borrar
-        # print(self.width, self.height)
-        # print("__________________")
-        # print("Car1", end=" ")
-        # print(self.car.x, self.car.y)
-        # print("Car2", end=" ")
-        # print(self.car2.x, self.car2.y)
-        if sand[int(self.car.x), int(self.car.y)] > 0:
+
+
+        #************************ ZONA DE RECOMPENSAS ******************************************
+
+        # Cuando el carrito1 se encuentra en obstaculo disminuye su velocidad a 1.
+        if sand[int(self.car.x), int(self.car.y)] > 0 or self.car.collide_widget(self.car2) or self.car.collide_widget(self.car3) or self.car.collide_widget(self.car4):
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
-            reward = -1
-        # Caso contrario el carrito mantiene una velocidad de 6.
+            reward = -1.1
+        # Caso contrario el carrito1 mantiene una velocidad de 6.
         else:
             self.car.velocity = Vector(6, 0).rotate(self.car.angle)
             reward = -0.2
             if distance < last_distance:
                 reward = 0.1
 
-        if sand[int(self.car2.x), int(self.car2.y)] > 0:
+        # Actualizamos lectura de sensores del carro 1 para que detecte cuando choca con otro carro.
+        if self.ball1.collide_widget(self.car2) or self.ball1.collide_widget(self.car3) or self.ball1.collide_widget(self.car4):
+            self.car.signal1 = 1.0
+       
+
+        if self.ball2.collide_widget(self.car2) or self.ball2.collide_widget(self.car3) or self.ball2.collide_widget(self.car4):
+        	self.car.signal2 = 1.0
+
+        if self.ball3.collide_widget(self.car2) or self.ball3.collide_widget(self.car3) or self.ball3.collide_widget(self.car4):
+        	self.car.signal3 = 1.0
+        #----------------------------------------------------------------------------------
+
+        # Cuando el carrito2 se encuentra en obstaculo disminuye su velocidad a 1.
+        if sand[int(self.car2.x), int(self.car2.y)] > 0 or self.car2.collide_widget(self.car) or self.car2.collide_widget(self.car3) or self.car2.collide_widget(self.car4):
             self.car2.velocity = Vector(1, 0).rotate(self.car2.angle)
-            reward2 = -1
+            reward2 = -1.1
+        # Caso contrario el carrito2 mantiene una velocidad de 6.
         else:
             self.car2.velocity = Vector(6, 0).rotate(self.car2.angle)
             reward2 = -0.2
             if distance2 < last_distance2:
                 reward2 = 0.1
 
-        if sand[int(self.car3.x), int(self.car3.y)] > 0:
+        # Actualizamos lectura de sensores del carro 2 para que detecte cuando choca con otro carro.
+        if self.ball4.collide_widget(self.car) or self.ball4.collide_widget(self.car3) or self.ball4.collide_widget(self.car4):
+            self.car2.signal1 = 1.0
+        
+
+        if self.ball5.collide_widget(self.car) or self.ball5.collide_widget(self.car3) or self.ball5.collide_widget(self.car4):
+            self.car2.signal2 = 1.0
+
+        if self.ball6.collide_widget(self.car) or self.ball6.collide_widget(self.car3) or self.ball6.collide_widget(self.car4):
+            self.car2.signal3 = 1.0
+        #----------------------------------------------------------------------------------
+
+        # Cuando el carrito3 se encuentra en obstaculo disminuye su velocidad a 1.
+        if sand[int(self.car3.x), int(self.car3.y)] > 0 or self.car3.collide_widget(self.car) or self.car3.collide_widget(self.car2) or self.car3.collide_widget(self.car4):
             self.car3.velocity = Vector(1, 0).rotate(self.car3.angle)
-            reward3 = -1
+            reward3 = -1.1
+        # Caso contrario el carrito3 mantiene una velocidad de 6.
         else:
             self.car3.velocity = Vector(6, 0).rotate(self.car3.angle)
             reward3 = -0.2
             if distance3 < last_distance3:
                 reward3 = 0.1
 
-        if sand[int(self.car4.x), int(self.car4.y)] > 0:
+        # Actualizamos lectura de sensores del carro 3 para que detecte cuando choca con otro carro.
+        if self.ball7.collide_widget(self.car) or self.ball7.collide_widget(self.car2) or self.ball7.collide_widget(self.car4):
+            self.car3.signal1 = 1.0
+        # print(self.signal1)
+
+        if self.ball8.collide_widget(self.car) or self.ball8.collide_widget(self.car2) or self.ball8.collide_widget(self.car4):
+        	self.car3.signal2 = 1.0
+
+        if self.ball9.collide_widget(self.car) or self.ball9.collide_widget(self.car2) or self.ball9.collide_widget(self.car4):
+        	self.car3.signal3 = 1.0
+        #----------------------------------------------------------------------------------
+
+        # Cuando el carrito4 se encuentra en obstaculo disminuye su velocidad a 1.
+        if sand[int(self.car4.x), int(self.car4.y)] > 0 or self.car4.collide_widget(self.car) or self.car4.collide_widget(self.car2) or self.car4.collide_widget(self.car3):
             self.car4.velocity = Vector(1, 0).rotate(self.car4.angle)
-            reward4 = -1
+            reward4 = -1.1
+        # Caso contrario el carrito4 mantiene una velocidad de 6.
         else:
             self.car4.velocity = Vector(6, 0).rotate(self.car4.angle)
             reward4 = -0.2
             if distance4 < last_distance4:
                 reward4 = 0.1
+
+        if self.ball10.collide_widget(self.car) or self.ball10.collide_widget(self.car2) or self.ball10.collide_widget(self.car3):
+            self.car4.signal1 = 1.0
+        # print(self.signal1)
+
+        if self.ball11.collide_widget(self.car) or self.ball11.collide_widget(self.car2) or self.ball11.collide_widget(self.car3):
+        	self.car4.signal2 = 1.0
+
+        if self.ball12.collide_widget(self.car) or self.ball12.collide_widget(self.car2) or self.ball12.collide_widget(self.car3):
+        	self.car4.signal3 = 1.0
+
         # Si el carrito logra salirse de los bordes del mapa, se dará una penalidad de -1.
         if self.car.x < 10:
             self.car.x = 10
@@ -577,6 +634,8 @@ class Game(Widget):
         if distance4 < 100:
             goal_x4 = self.width-goal_x4
             goal_y4 = self.height-goal_y4
+
+        # *******************************************************************************
 
         last_distance4 = distance4
         stats = {
@@ -655,8 +714,9 @@ class MyPaintWidget(Widget):
             x = int(touch.x)
             y = int(touch.y)
             length += np.sqrt(max((x - last_x)**2 + (y - last_y)**2, 2))
-            n_points += 1.
-            density = n_points/(length)
+            #n_points += 1.
+            #density = n_points/(length)
+            density = 0.3
             touch.ud['line'].width = int(20 * density + 1)
             sand[int(touch.x) - 10: int(touch.x) + 10,
                  int(touch.y) - 10: int(touch.y) + 10] = 1
