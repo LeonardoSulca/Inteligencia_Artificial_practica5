@@ -1,7 +1,9 @@
 # Inteligencia_Artificial_practica5
 Repositorio para el trabajo de investigacion: Aprendizaje por Refuerzo Profundo
 
-**usar el requiremests.txt**
+**usar el requiremests.txt**:
+
+pip install -r requirements.txt
 
 **Instalar:**
 
