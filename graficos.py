@@ -65,15 +65,12 @@ def animate(i):
 
 
 anim = FuncAnimation(fig, animate, init_func=init,
-                     frames=np.linspace(0, 100, N),
+                     frames=np.linspace(0, 100, N - 5),
                      interval=0.1,
                      blit=True,
                      repeat=False)
 
 
-# Configuracion para guardadr la animacion
-# Writer = animation.writers['ffmpeg']
-# writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-# anim.save('sine_wave.mp4', writer=writer)
-
 plt.show()
+
+# anim.save('recompensas_car.gif', writer='imagemagick')

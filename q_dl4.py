@@ -146,12 +146,12 @@ class Dqn4(object):
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                    }, 'last_brain4.pth')
+                    }, './saveBrain/last_brain4.pth')
 
     def load(self):
         if os.path.isfile('last_brain4.pth'):
             print("=> cargar checkpoint... ")
-            checkpoint = torch.load('last_brain4.pth')
+            checkpoint = torch.load('./saveBrain/last_brain4.pth')
             self.model.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("hecho !")

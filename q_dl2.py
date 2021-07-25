@@ -145,12 +145,12 @@ class Dqn2(object):
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                    }, 'last_brain2.pth')
+                    }, './saveBrain/last_brain2.pth')
 
     def load(self):
         if os.path.isfile('last_brain2.pth'):
             print("=> cargar checkpoint... ")
-            checkpoint = torch.load('last_brain2.pth')
+            checkpoint = torch.load('./saveBrain/last_brain2.pth')
             self.model.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("hecho !")

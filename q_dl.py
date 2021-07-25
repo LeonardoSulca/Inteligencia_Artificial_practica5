@@ -25,7 +25,7 @@ class Network(nn.Module):
         self.fc2 = nn.Linear(30, nb_action)
 
     def forward(self, state):
-        x = F.relu(self.fc1(state))
+        x = F.tanh(self.fc1(state))
         q_values = self.fc2(x)
         return q_values
 
@@ -146,12 +146,12 @@ class Dqn(object):
     def save(self):
         torch.save({'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                    }, 'last_brain.pth')
+                    }, './saveBrain/last_brain.pth')
 
     def load(self):
         if os.path.isfile('last_brain.pth'):
             print("=> cargar checkpoint... ")
-            checkpoint = torch.load('last_brain.pth')
+            checkpoint = torch.load('./saveBrain/last_brain.pth')
             self.model.load_state_dict(checkpoint['state_dict'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("hecho !")
