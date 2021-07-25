@@ -57,6 +57,12 @@ reward4 = 0
 first_update = True
 
 
+list_reward_car_one = []
+list_reward_car_two = []
+list_reward_car_three = []
+list_reward_car_four = []
+
+
 def init():
     global sand
     global goal_x
@@ -602,6 +608,12 @@ class Game(Widget):
             'Last reward car 4': "{0:.2f}".format(reward4),
         }
 
+        list_reward_car_one.append(reward)
+        list_reward_car_two.append(reward2)
+        list_reward_car_three.append(reward3)
+        list_reward_car_four.append(reward4)
+
+
         if self.stats_widget is not None:
             self.stats_widget.update_stats(stats)
 
@@ -709,6 +721,10 @@ class CarApp(App):
         brain2.save()
         brain3.save()
         brain4.save()
+        np.savetxt("./rewards/reward_one.txt", list_reward_car_one)
+        np.savetxt("./rewards/reward_two.txt", list_reward_car_two)
+        np.savetxt("./rewards/reward_three.txt", list_reward_car_three)
+        np.savetxt("./rewards/reward_four.txt", list_reward_car_four)
 
     def load(self, obj):
         print("Cargando la ultima memoria de IA...")
