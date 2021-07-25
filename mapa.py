@@ -5,6 +5,12 @@ import numpy as np
 
 # Agregamos todas las librerias propias de Kivy
 
+# Esta linea es para que el clic derecho no ponga un punto rojo, Ademas de limitar los fps
+
+from kivy.config import Config
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+Config.set('graphics', 'maxfps', '60')
+
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
@@ -13,7 +19,6 @@ from kivy.uix.widget import Widget
 # from kivy.uix.button import Button
 from kivy.uix.actionbar import ActionBar
 from kivy.graphics import Color, Line
-from kivy.config import Config
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty
 from kivy.vector import Vector
 from kivy.clock import Clock
@@ -24,9 +29,6 @@ from q_dl import Dqn
 from q_dl2 import Dqn2
 from q_dl3 import Dqn3
 from q_dl4 import Dqn4
-# Esta linea es para que el clic derecho no ponga un punto rojo
-
-Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 # Introduciendo last_x y last_y, usados para mantener el último punto en la memoria cuando dibujamos la arena en el mapa
 last_x = 0
