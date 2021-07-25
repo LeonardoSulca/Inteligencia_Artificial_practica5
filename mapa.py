@@ -473,7 +473,7 @@ class Game(Widget):
         # Cuando el carrito1 se encuentra en obstaculo disminuye su velocidad a 1.
         if sand[int(self.car.x), int(self.car.y)] > 0 or self.car.collide_widget(self.car2) or self.car.collide_widget(self.car3) or self.car.collide_widget(self.car4):
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
-            reward = -1.1
+            reward = -1
         # Caso contrario el carrito1 mantiene una velocidad de 6.
         else:
             self.car.velocity = Vector(6, 0).rotate(self.car.angle)
@@ -496,7 +496,7 @@ class Game(Widget):
         # Cuando el carrito2 se encuentra en obstaculo disminuye su velocidad a 1.
         if sand[int(self.car2.x), int(self.car2.y)] > 0 or self.car2.collide_widget(self.car) or self.car2.collide_widget(self.car3) or self.car2.collide_widget(self.car4):
             self.car2.velocity = Vector(1, 0).rotate(self.car2.angle)
-            reward2 = -1.1
+            reward2 = -1
         # Caso contrario el carrito2 mantiene una velocidad de 6.
         else:
             self.car2.velocity = Vector(6, 0).rotate(self.car2.angle)
@@ -519,7 +519,7 @@ class Game(Widget):
         # Cuando el carrito3 se encuentra en obstaculo disminuye su velocidad a 1.
         if sand[int(self.car3.x), int(self.car3.y)] > 0 or self.car3.collide_widget(self.car) or self.car3.collide_widget(self.car2) or self.car3.collide_widget(self.car4):
             self.car3.velocity = Vector(1, 0).rotate(self.car3.angle)
-            reward3 = -1.1
+            reward3 = -1
         # Caso contrario el carrito3 mantiene una velocidad de 6.
         else:
             self.car3.velocity = Vector(6, 0).rotate(self.car3.angle)
@@ -542,7 +542,7 @@ class Game(Widget):
         # Cuando el carrito4 se encuentra en obstaculo disminuye su velocidad a 1.
         if sand[int(self.car4.x), int(self.car4.y)] > 0 or self.car4.collide_widget(self.car) or self.car4.collide_widget(self.car2) or self.car4.collide_widget(self.car3):
             self.car4.velocity = Vector(1, 0).rotate(self.car4.angle)
-            reward4 = -1.1
+            reward4 = -1
         # Caso contrario el carrito4 mantiene una velocidad de 6.
         else:
             self.car4.velocity = Vector(6, 0).rotate(self.car4.angle)
