@@ -40,6 +40,20 @@
             size: self.size
         PopMatrix
 
+<Car4>:
+    size: 20, 10
+    canvas:
+        PushMatrix
+        Color:
+            rgba: 0,1,0,1
+        Rotate:
+            angle: self.angle
+            origin: self.center
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        PopMatrix
+
 <Ball1>:
     size: 10,10
     canvas:
@@ -118,10 +132,37 @@
             pos: self.pos
             size: self.size
 
+<Ball10>:
+    size: 10,10
+    canvas:
+        Color:
+            rgba: 1,0,0,1
+        Ellipse:
+            pos: self.pos
+            size: self.size
+<Ball11>:
+    size: 10,10
+    canvas:
+        Color:
+            rgba: 0,1,1,1
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<Ball12>:
+    size: 10,10
+    canvas:
+        Color:
+            rgba: 1,1,0,1
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
 <Game>:
     car: game_car
     car2: game_car2
     car3: game_car3
+    car4: game_car4
     ball1: game_ball1
     ball2: game_ball2
     ball3: game_ball3
@@ -131,7 +172,9 @@
     ball7: game_ball7
     ball8: game_ball8
     ball9: game_ball9
-
+    ball10: game_ball10
+    ball11: game_ball11
+    ball12: game_ball12
     Car:
         id: game_car
         center: self.parent.center
@@ -140,6 +183,9 @@
         center: self.parent.center
     Car3:
         id: game_car3
+        center: self.parent.center
+    Car4:
+        id: game_car4
         center: self.parent.center
     Ball1:
         id: game_ball1
@@ -167,6 +213,15 @@
         center: self.parent.center
     Ball9:
         id: game_ball9
+        center: self.parent.center
+    Ball10:
+        id: game_ball10
+        center: self.parent.center
+    Ball11:
+        id: game_ball11
+        center: self.parent.center
+    Ball12:
+        id: game_ball12
         center: self.parent.center
 
 <RootWidget>:
